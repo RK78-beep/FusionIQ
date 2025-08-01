@@ -8,9 +8,8 @@ from sklearn.linear_model import LogisticRegression
 import tempfile
 import PyPDF2
 import speech_recognition as sr
-import requests
 
-# --- Load Model and Scaler ---
+# --- Load model and scaler ---
 model = joblib.load("model.pkl")
 scaler = joblib.load("scaler.pkl")
 
@@ -36,7 +35,6 @@ def preprocess_data(df1, df2, region="", sector="", environment=""):
     combined = combined.loc[:, ~combined.columns.duplicated()]
     combined = combined.fillna(combined.mean())
 
-    # Optional contextual info
     if region: combined["region_" + region] = 1
     if sector: combined["sector_" + sector.lower()] = 1
     if environment: combined["env_" + environment.lower()] = 1
@@ -75,7 +73,7 @@ def plot_financials(df):
     ax.set_xticklabels(df.columns, rotation=45, ha="right")
     return fig
 
-# --- SHAP Explainer ---
+# --- SHAP Explainability ---
 def explain_with_shap(X):
     explainer = shap.Explainer(model, feature_names=model.feature_names_in_)
     shap_values = explainer(X)
@@ -96,23 +94,6 @@ def score_esg_pmi(df):
     esg_score = np.random.randint(60, 95)
     pmi_risk = np.random.randint(10, 50)
     return esg_score, pmi_risk
-
-# --- Real-Time News Fetcher ---
-def fetch_financial_news(query="merger acquisition"):
-    api_key = "f18e256bcfba46758e59667478fcf462"  # ✅ Your NewsAPI Key
-    url = f"https://newsapi.org/v2/everything?q={query}&sortBy=publishedAt&language=en&pageSize=5&apiKey={api_key}"
-
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            data = response.json()
-            return data.get("articles", [])[:5]
-        elif response.status_code == 401:
-            return [{"title": "❌ Invalid or missing API key. Please check your credentials.", "url": "#"}]
-        else:
-            return [{"title": f"❌ API Error {response.status_code}: {response.reason}", "url": "#"}]
-    except Exception as e:
-        return [{"title": f"❌ Network Error: {str(e)}", "url": "#"}]
 
 # --- Voice-to-Text ---
 def convert_voice_to_text():
