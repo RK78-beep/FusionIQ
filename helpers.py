@@ -8,6 +8,7 @@ from sklearn.linear_model import LogisticRegression
 import tempfile
 import PyPDF2
 import speech_recognition as sr
+import requests
 
 # --- Load model and scaler ---
 model = joblib.load("model.pkl")
@@ -73,7 +74,7 @@ def plot_financials(df):
     ax.set_xticklabels(df.columns, rotation=45, ha="right")
     return fig
 
-# --- SHAP Explainability ---
+# --- SHAP Explainer ---
 def explain_with_shap(X):
     explainer = shap.Explainer(model, feature_names=model.feature_names_in_)
     shap_values = explainer(X)
@@ -94,6 +95,15 @@ def score_esg_pmi(df):
     esg_score = np.random.randint(60, 95)
     pmi_risk = np.random.randint(10, 50)
     return esg_score, pmi_risk
+
+# --- News API Fetcher ---
+def fetch_financial_news(query="merger acquisition"):
+    url = f"https://newsapi.org/v2/everything?q={query}&apiKey=f18e256bcfba46758e59667478fcf462"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        return data.get("articles", [])[:5]
+    return []
 
 # --- Voice-to-Text ---
 def convert_voice_to_text():
